@@ -1,0 +1,35 @@
+{
+    "name": "openepcis/unopim-connector",
+    "description": "The UnoPim half of the OpenEPCIS connector: GS1 identity where a merchant is already looking.",
+    "license": "MIT",
+    "homepage": "https://github.com/openepcis/openepcis-unopim",
+    "support": {
+        "issues": "https://github.com/openepcis/openepcis-unopim/issues",
+        "source": "https://github.com/openepcis/openepcis-unopim"
+    },
+    "keywords": [
+        "unopim",
+        "gs1",
+        "gtin",
+        "gpc",
+        "digital-link",
+        "openepcis"
+    ],
+    "type": "library",
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "OpenEPCIS\\UnoPim\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "OpenEPCIS\\UnoPim\\Providers\\OpenEpcisServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}

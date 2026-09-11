@@ -1,0 +1,32 @@
+# Copyright (c) 2026 benelog GmbH & Co. KG
+# SPDX-License-Identifier: MIT
+#
+# There is no PHP test suite: the package is thin glue in front of the bridge,
+# and it is exercised by opening a product in a running UnoPim. What a machine
+# can check is that every file parses and that composer.json is well formed.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.2", "8.4"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          tools: composer
+      - run: composer validate --strict
+      - run: find src -name '*.php' ! -name '*.blade.php' -print0 | xargs -0 -n1 php -l

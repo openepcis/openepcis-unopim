@@ -1,0 +1,80 @@
+{
+ "$comment": [
+  "Curated terms that UnoPim already has an attribute for.",
+  "",
+  "A template installs a field per term, and a term whose meaning UnoPim",
+  "already carries must point at the attribute that carries it — not create a",
+  "second one beside it. A merchant maintains a weight once; asking them to",
+  "fill in `weight` and `netWeight` is how a catalogue starts disagreeing with",
+  "itself, and whichever of the two the connector reads, the other is wrong.",
+  "",
+  "Every entry is a decision, so every entry says why. Where UnoPim has",
+  "nothing that means the same thing, there is no entry and the field gets its",
+  "own attribute — which is right: inventing an alias to a near-enough field",
+  "is worse than one honest new one."
+ ],
+ "aliases": {
+  "batteryModelIdentifier": {
+   "attribute": "dpp_model_identifier",
+   "why": "The battery regulation's name for the model identifier. Same field as electronics' modelIdentifier: the regulations differ in wording, not in what they identify."
+  },
+  "brand": {
+   "attribute": "brand",
+   "why": "Same name, same meaning; the attribute is a select and the adapter resolves the option label before publishing."
+  },
+  "gpcCategoryCode": {
+   "attribute": "ddm_gpc_code",
+   "why": "The GPC brick code the connector already reads and the plugin's picker already writes. A second attribute beside it would be a field a merchant fills for nothing — and the completeness score would count the empty one."
+  },
+  "gtin": {
+   "attribute": "dpp_gtin",
+   "why": "UnoPim's own passport field for a GS1 key, role Gtin. Written by the connector, which composes it from the company prefix and the SKU."
+  },
+  "hasBatchLotNumber": {
+   "attribute": "dpp_batch_identifier",
+   "why": "UnoPim's own passport field for a batch, role Batch."
+  },
+  "inPackageDepth": {
+   "attribute": "length",
+   "why": "A PIM's length/width/height are the packaged figures, which is what inPackage* means in GS1."
+  },
+  "inPackageHeight": {
+   "attribute": "height",
+   "why": "As inPackageDepth."
+  },
+  "inPackageWidth": {
+   "attribute": "width",
+   "why": "As inPackageDepth."
+  },
+  "modelIdentifier": {
+   "attribute": "dpp_model_identifier",
+   "why": "UnoPim's own passport field for a model, role Model. ESPR names a model identifier per regulation — electronics calls it modelIdentifier, the battery regulation batteryModelIdentifier — but a passport has one model, so both point at the one field."
+  },
+  "netWeight": {
+   "attribute": "weight",
+   "why": "UnoPim keeps weight as a measurement attribute with a real unit. netWeight is what a weight is; netContent would be the declared fill quantity, which a shirt does not have."
+  },
+  "productDescription": {
+   "attribute": "short_description",
+   "why": "GS1's productDescription is the one-line description shown under the name; UnoPim's short_description is that line. The long copy is productMarketingMessage."
+  },
+  "productMarketingMessage": {
+   "attribute": "description",
+   "why": "UnoPim's description holds prose, and the vocabulary's term for prose is this one — additionalProductDescription is about variants, not text."
+  },
+  "productName": {
+   "attribute": "name",
+   "why": "UnoPim's name is the consumer-facing short name, which is what productName is."
+  },
+  "referencedFile": {
+   "attribute": "image",
+   "why": "UnoPim's media attribute. The adapter turns its stored path into a public URL and wraps it as ReferencedFileDetails."
+  }
+ },
+ "identifier_roles": {
+  "$comment": "Which field plays which role on an installed template. Read by UnoPim itself and by the connector, so both agree without either being told twice.",
+  "gtin": "dpp_gtin",
+  "batch": "dpp_batch_identifier",
+  "model": "dpp_model_identifier"
+ }
+}

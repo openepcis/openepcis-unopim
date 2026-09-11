@@ -4,7 +4,7 @@
 |---|---|
 | **Licence** | MIT |
 | **UnoPim** | 3.0 |
-| **PHP** | 8.2 or newer |
+| **PHP** | 8.4 or newer (what UnoPim 3.0 itself requires) |
 | **Needs** | a reachable OpenEPCIS connector (the bridge); nothing else is installed into the PIM |
 
 The UnoPim half of the connector. The Java side reads UnoPim and publishes into

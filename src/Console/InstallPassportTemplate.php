@@ -9,6 +9,7 @@ namespace OpenEPCIS\UnoPim\Console;
 
 use Illuminate\Console\Command;
 use Webkul\Attribute\Models\Attribute;
+use Webkul\Attribute\Models\AttributeFamilyProxy;
 use Webkul\ProductPassport\Http\Controllers\PublicationController;
 use Webkul\ProductPassport\Models\PassportTemplate;
 use Webkul\ProductPassport\Models\PassportTemplateField;
@@ -43,9 +44,14 @@ use Webkul\ProductPassport\Models\PassportTemplateSection;
  */
 class InstallPassportTemplate extends Command
 {
+    // The blueprint list is NOT spelled out here. It was, and it went stale: the
+    // help named four while five shipped, so `gs1-product` -- the one bound to
+    // the default family -- looked like it did not exist. The authoritative list
+    // is the Resources/blueprints directory, and handle() prints it on an
+    // unknown name.
     protected $signature = 'openepcis:passport-template
-                            {blueprint : Which regulation — battery, textile, ppwr, electronics}
-                            {--family=* : Attribute families that should publish it}
+                            {blueprint : Which regulation — pass an unknown name to list them}
+                            {--family=* : Attribute family codes that should publish it}
                             {--dry-run : Say what would change and change nothing}';
 
     protected $description = 'Install an OpenEPCIS regulation passport as a UnoPim template';
@@ -75,6 +81,18 @@ class InstallPassportTemplate extends Command
         }
 
         $blueprint = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+
+        if ($offenders = $this->badCodes($blueprint)) {
+            $this->error("Blueprint '$name' carries codes UnoPim will not accept:");
+            foreach ($offenders as $offender) {
+                $this->line('  '.$offender);
+            }
+            $this->comment('Allowed: '.self::CODE_PATTERN.' — letters first, then letters,'
+                .' digits or underscores. A hyphen is not allowed.');
+
+            return self::FAILURE;
+        }
+
         $dryRun = (bool) $this->option('dry-run');
 
         $this->info(sprintf(
@@ -130,6 +148,8 @@ class InstallPassportTemplate extends Command
         $this->line(sprintf('  fields: %d created, %d updated, 0 removed', $created, $updated));
         $this->line('  Nothing is ever deleted: a field you removed stays removed.');
 
+        $this->families($template, $dryRun);
+
         // Installing into a switched-off feature succeeds and shows nothing:
         // no Passports entry in the menu, no header on a product. Saying so
         // here costs one query and saves the hunt for a template that is
@@ -181,6 +201,132 @@ class InstallPassportTemplate extends Command
             $translation->label = $field['label'];
             $translation->save();
         }
+    }
+
+    /**
+     * Binds the template to the attribute families that should publish it.
+     *
+     * <p>The --family option was declared from the start and never read. That is
+     * worse than not having it: the command accepted `--family=default`, said
+     * nothing, and left the template bound to nothing -- and an unbound template
+     * publishes no passport for any product. It was found on 2026-09-03, when
+     * demo had all five templates installed, every field sourced, and still not
+     * one passport, because the binding row was simply absent.
+     *
+     * <p>A family publishes AT MOST ONE template: passport_template_families
+     * carries UNIQUE(attribute_family_id), not a composite key. So binding a
+     * family that already belongs to another template is not an addition, it is
+     * a move -- and this command does not take things away. It says which
+     * template holds the family and leaves it alone; rebinding is a decision for
+     * whoever knows why the other template has it, and it is one click in
+     * Catalog -> Passports -> Templates.
+     *
+     * <p>Learned the hard way: syncWithoutDetaching walks straight into that
+     * unique constraint and fails the whole command with an SQLSTATE 23505,
+     * after the fields are already written.
+     *
+     * <p>An unknown code is a warning and not a failure. Installing the template
+     * has already succeeded at this point, and failing here would leave the
+     * caller unsure whether to run it again.
+     */
+    private function families(?PassportTemplate $template, bool $dryRun): void
+    {
+        /** @var array<int,string> $codes */
+        $codes = array_values(array_unique(array_filter((array) $this->option('family'))));
+
+        if ($codes === []) {
+            return;
+        }
+
+        if ($dryRun) {
+            $this->line('  families: would bind '.implode(', ', $codes));
+
+            return;
+        }
+
+        if ($template === null) {
+            return;
+        }
+
+        $families = AttributeFamilyProxy::modelClass()::query()
+            ->whereIn('code', $codes)
+            ->get()
+            ->keyBy('code');
+
+        foreach (array_diff($codes, $families->keys()->all()) as $missing) {
+            $this->warn("  No attribute family '$missing' — not bound.");
+        }
+
+        $bound = [];
+
+        foreach ($families as $code => $family) {
+            $holder = PassportTemplate::query()
+                ->whereHas('families', fn ($query) => $query->whereKey($family->id))
+                ->first();
+
+            if ($holder !== null) {
+                if ($holder->id !== $template->id) {
+                    $this->warn("  Family '$code' already publishes '{$holder->code}' — left as it is.");
+                }
+
+                continue;
+            }
+
+            $template->families()->attach($family->id);
+            $bound[] = $code;
+        }
+
+        if ($bound !== []) {
+            $this->line('  families: bound '.implode(', ', $bound));
+        }
+    }
+
+    /**
+     * The pattern PassportTemplateRequest enforces on every code — the
+     * template's own, each section's and each field's. Kept here verbatim
+     * rather than referenced, because the request class is UnoPim's and a
+     * blueprint has to be judged before anything is written.
+     */
+    private const CODE_PATTERN = '/^[a-zA-Z]+[a-zA-Z0-9_]+$/';
+
+    /**
+     * Codes this blueprint would install that UnoPim would later refuse.
+     *
+     * WHY THIS RUNS BEFORE THE INSTALL AND NOT AFTER: installing does not
+     * validate. The template appears, opens, looks finished — and the
+     * validation fires on SAVE, so the first person to edit anything about it
+     * gets the refusal, with no hint that the blueprint was at fault. That is
+     * exactly how five templates with hyphenated codes lived on demo and dev
+     * until 2026-09-03, and how three hyphenated SECTION codes in battery
+     * survived a first round of fixing the template codes: nothing complained
+     * at install time, twice.
+     *
+     * @return list<string>
+     */
+    private function badCodes(array $blueprint): array
+    {
+        $offenders = [];
+
+        if (! preg_match(self::CODE_PATTERN, (string) ($blueprint['code'] ?? ''))) {
+            $offenders[] = 'template code: '.($blueprint['code'] ?? '(missing)');
+        }
+
+        $sections = [];
+        foreach ($blueprint['fields'] ?? [] as $field) {
+            if (! preg_match(self::CODE_PATTERN, (string) ($field['code'] ?? ''))) {
+                $offenders[] = 'field code: '.($field['code'] ?? '(missing)');
+            }
+            if (isset($field['section'])) {
+                $sections[$field['section']] = true;
+            }
+        }
+        foreach (array_keys($sections) as $section) {
+            if (! preg_match(self::CODE_PATTERN, (string) $section)) {
+                $offenders[] = 'section code: '.$section;
+            }
+        }
+
+        return array_values(array_unique($offenders));
     }
 
     private function template(array $blueprint, bool $dryRun): ?PassportTemplate

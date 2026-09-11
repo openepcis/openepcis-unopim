@@ -7,6 +7,7 @@
 
 namespace OpenEPCIS\UnoPim;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\Log;
  */
 class Bridge
 {
+    private const TOKEN_CACHE_KEY = 'openepcis:bridge-token';
+
     /** @return array{ok: bool, results?: array, error?: string} */
     public function searchGpc(string $query): array
     {
@@ -93,16 +96,91 @@ class Bridge
 
     private function get(string $path, array $query): array
     {
-        return $this->call(fn () => Http::timeout($this->timeout())
-            ->acceptJson()
-            ->get($this->url($path), $query), $path);
+        return $this->call(fn () => $this->client()->get($this->url($path), $query), $path);
     }
 
     private function post(string $path, array $body, ?float $timeout = null): array
     {
-        return $this->call(fn () => Http::timeout($timeout ?? $this->timeout())
-            ->acceptJson()
-            ->post($this->url($path), $body), $path);
+        return $this->call(fn () => $this->client($timeout)->post($this->url($path), $body), $path);
+    }
+
+    /**
+     * A request already carrying the bearer the bridge requires.
+     *
+     * The bridge is @Authenticated and reads a defaultGroup claim off the token
+     * to decide which connection the caller may drive. Without a token every
+     * call is a 401 -- exactly what the panel shows as "the OpenEPCIS platform
+     * refused the request (401)" when this is not configured.
+     *
+     * When no client is configured the request goes out unauthenticated, so a
+     * genuinely open bridge (a local dev run) still works and a misconfigured
+     * one fails with the same 401 as before rather than silently.
+     */
+    private function client(?float $timeout = null): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::timeout($timeout ?? $this->timeout())->acceptJson();
+        $token = $this->token();
+
+        return $token === null ? $request : $request->withToken($token);
+    }
+
+    /**
+     * A client-credentials access token for the bridge, cached until shortly
+     * before it expires.
+     *
+     * client_credentials, not a stored offline token: this side has no user and
+     * needs none. The identity is the connection's own service client, and the
+     * defaultGroup claim that scopes it to this tenant is stamped on the token
+     * by Keycloak, not chosen here.
+     *
+     * A failure to mint returns null rather than throwing: the caller renders
+     * "platform unreachable", the honest thing to show when the token endpoint
+     * is down, and never a stack trace in a dropdown.
+     */
+    private function token(): ?string
+    {
+        $clientId = (string) config('openepcis.auth.client_id');
+        $secret = (string) config('openepcis.auth.client_secret');
+        $tokenUrl = (string) config('openepcis.auth.token_url');
+
+        if ($clientId === '' || $secret === '' || $tokenUrl === '') {
+            return null;
+        }
+
+        $cached = Cache::get(self::TOKEN_CACHE_KEY);
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        try {
+            $response = Http::asForm()->timeout($this->timeout())->post($tokenUrl, [
+                'grant_type'    => 'client_credentials',
+                'client_id'     => $clientId,
+                'client_secret' => $secret,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('OpenEPCIS bridge token endpoint unreachable', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::warning('OpenEPCIS bridge token request refused', ['status' => $response->status()]);
+
+            return null;
+        }
+
+        $token = (string) $response->json('access_token');
+        if ($token === '') {
+            return null;
+        }
+
+        // A little short of expiry, floored at 30s, so a call never rides a
+        // token that expires in flight. Re-minting is one cheap round trip.
+        $ttl = max(30, (int) $response->json('expires_in', 60) - 30);
+        Cache::put(self::TOKEN_CACHE_KEY, $token, $ttl);
+
+        return $token;
     }
 
     private function call(callable $request, string $path): array

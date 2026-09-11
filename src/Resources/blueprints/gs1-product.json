@@ -1,5 +1,5 @@
 {
- "code": "openepcis-gs1-product",
+ "code": "openepcis_gs1_product",
  "vocabulary": "gs1",
  "source": "GS1 web vocabulary, scoped to what the OpenEPCIS catalog stores",
  "fields": [

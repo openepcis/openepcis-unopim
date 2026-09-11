@@ -26,6 +26,18 @@ return [
      */
     'tenant' => env('OPENEPCIS_TENANT', 'pim1'),
 
+    // How this side authenticates to the bridge. The bridge is @Authenticated
+    // and reads a defaultGroup claim off the token; without these three set,
+    // every call is a 401. token_url is the realm's token endpoint,
+    // client_id/secret a confidential client whose service account carries the
+    // tenant's defaultGroup. Empty client_id means "unauthenticated", for a
+    // local open bridge only.
+    'auth' => [
+        'token_url'     => env('OPENEPCIS_BRIDGE_TOKEN_URL', ''),
+        'client_id'     => env('OPENEPCIS_BRIDGE_CLIENT_ID', ''),
+        'client_secret' => env('OPENEPCIS_BRIDGE_CLIENT_SECRET', ''),
+    ],
+
     /*
      * How long to wait for the bridge, in seconds.
      *

@@ -1,5 +1,5 @@
 {
- "code": "openepcis-textile",
+ "code": "openepcis_textile",
  "vocabulary": "eutex",
  "source": "openepcis-dpp-ready extensions/eu/textile",
  "fields": [

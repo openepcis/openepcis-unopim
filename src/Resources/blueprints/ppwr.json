@@ -1,5 +1,5 @@
 {
- "code": "openepcis-ppwr",
+ "code": "openepcis_ppwr",
  "vocabulary": "euppwr",
  "source": "openepcis-dpp-ready extensions/eu/ppwr",
  "fields": [

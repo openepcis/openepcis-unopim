@@ -1,5 +1,5 @@
 {
- "code": "openepcis-electronics",
+ "code": "openepcis_electronics",
  "vocabulary": "euelec",
  "source": "openepcis-dpp-ready extensions/eu/electronics",
  "fields": [

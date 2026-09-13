@@ -32,13 +32,11 @@ something on our side.
 
 ## Installation
 
-The package is loaded by Laravel's package discovery, so an installation is a
-composer require plus a cache clear. It is not on Packagist yet, so the
-repository has to be named once:
+The package is on Packagist and loaded by Laravel's package discovery, so an
+installation is a composer require plus a cache clear:
 
 ```bash
-composer config repositories.openepcis vcs https://github.com/openepcis/openepcis-unopim
-composer require openepcis/unopim-connector:dev-main
+composer require openepcis/unopim-connector
 php artisan config:clear
 ```
 

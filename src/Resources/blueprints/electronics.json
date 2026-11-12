@@ -46,19 +46,6 @@
    "required": false
   },
   {
-   "code": "assessmentDate",
-   "vocabulary": "euelec",
-   "label": "Assessment Date",
-   "definition": "Date when the repairability assessment was performed.",
-   "range": "xsd:date",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The assessment date tells consumers how current the public repairability score is.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
    "code": "collectionMethod",
    "vocabulary": "euelec",
    "label": "Collection Method",
@@ -98,45 +85,6 @@
    "required": false
   },
   {
-   "code": "criterionDetails",
-   "vocabulary": "euelec",
-   "label": "Criterion Details",
-   "definition": "Detailed explanation of the criterion score.",
-   "range": "xsd:string",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The criterion explanation is part of the published substantiation of the repairability index.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "criterionMaxScore",
-   "vocabulary": "euelec",
-   "label": "Criterion Max Score",
-   "definition": "Maximum possible score for this criterion (typically 20).",
-   "range": "xsd:decimal",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The criterion maximum makes the public per-criterion score interpretable.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "criterionScore",
-   "vocabulary": "euelec",
-   "label": "Criterion Score",
-   "definition": "Score for this criterion (0-20 scale).",
-   "range": "xsd:decimal",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "Per-criterion scores substantiate the public repairability index.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
    "code": "dataWiped",
    "vocabulary": "euelec",
    "label": "Data Wiped",
@@ -158,19 +106,6 @@
    "section": "general",
    "tier": "operator",
    "tier_rationale": "The intake condition assessment is a treatment-operator judgement about one waste item (Dir. 2012/19/EU Art. 8), not product information.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "displayScore",
-   "vocabulary": "euelec",
-   "label": "Display Score",
-   "definition": "Consumer-facing repairability score (0-10 scale, totalScore/10).",
-   "range": "xsd:decimal",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The 0-10 display score is the consumer-facing figure printed on the repairability label.",
    "tier_mandated": false,
    "granularity": "class",
    "required": false
@@ -267,19 +202,6 @@
    "required": false
   },
   {
-   "code": "hasAssessmentBody",
-   "vocabulary": "euelec",
-   "label": "Assessment Body",
-   "definition": "Organization that performed the repairability assessment.",
-   "range": "gs1:Organization",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "Who assessed the repairability index is transparency information that makes the public score credible.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
    "code": "hasAvoidedEmissions",
    "vocabulary": "euelec",
    "label": "Avoided Emissions",
@@ -358,19 +280,6 @@
    "required": false
   },
   {
-   "code": "hasCriterionType",
-   "vocabulary": "euelec",
-   "label": "Criterion Type",
-   "definition": "Type of repair criterion being scored.",
-   "range": "euelec:RepairCriterionType",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The criterion type identifies which published repairability criterion a score belongs to.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
    "code": "hasDisplaySpecification",
    "vocabulary": "euelec",
    "label": "Display Specification",
@@ -417,7 +326,7 @@
    "range": "euelec:RecoveredMaterial",
    "section": "materials",
    "tier": "operator",
-   "tier_rationale": "Pre-treatment recoverability estimates are recycler planning data; the public tier carries the design-level euelec:recyclabilityRate and euelec:recoverabilityRate.",
+   "tier_rationale": "Pre-treatment recoverability estimates are recycler planning data; the public tier carries the design-level recyclability and recoverable rates (oec:hasRecyclabilityAssessment).",
    "tier_mandated": false,
    "granularity": "class",
    "required": false
@@ -587,32 +496,6 @@
    "section": "general",
    "tier": "operator",
    "tier_rationale": "What one repair actually cost is transaction data; the publicly required figure is the spare-part price (euelec:hasSparePartPrice, Public).",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "hasRepairCriteria",
-   "vocabulary": "euelec",
-   "label": "Repair Criteria",
-   "definition": "List of individual criterion scores.",
-   "range": "euelec:RepairCriterion",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "Per-criterion scores are published alongside the repairability index so consumers can see how the score was reached.",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "hasRepairabilityClass",
-   "vocabulary": "euelec",
-   "label": "Repairability Class",
-   "definition": "EU Right to Repair classification (A-E grade).",
-   "range": "euelec:EURepairabilityClass",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The A-E repairability class is the consumer-facing band of the repair assessment; aligned with core oec:repairabilityClass (Public).",
    "tier_mandated": false,
    "granularity": "class",
    "required": false
@@ -852,32 +735,6 @@
    "required": false
   },
   {
-   "code": "recoverabilityRate",
-   "vocabulary": "euelec",
-   "label": "Recoverability Rate",
-   "definition": "Fraction of device that can be recovered (recycling + energy recovery, 0-1 scale).",
-   "range": "xsd:decimal",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The recoverable fraction is a consumer-facing circularity claim tied to the WEEE recovery targets (Dir. 2012/19/EU Annex V).",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "recyclabilityRate",
-   "vocabulary": "euelec",
-   "label": "Recyclability Rate",
-   "definition": "Fraction of device that can be recycled (0-1 scale).",
-   "range": "xsd:decimal",
-   "section": "circularity",
-   "tier": "consumer",
-   "tier_rationale": "The recyclable fraction is a consumer-facing circularity claim tied to the WEEE recovery targets (Dir. 2012/19/EU Annex V); aligned with core oec:recyclabilityRate (Public).",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
    "code": "recyclingProcess",
    "vocabulary": "euelec",
    "label": "Recycling Process",
@@ -1042,19 +899,6 @@
    "section": "general",
    "tier": "operator",
    "tier_rationale": "The routing decision taken at a sorting facility is operational treatment data (Dir. 2012/19/EU Art. 8).",
-   "tier_mandated": false,
-   "granularity": "class",
-   "required": false
-  },
-  {
-   "code": "totalScore",
-   "vocabulary": "euelec",
-   "label": "Total Score",
-   "definition": "Total repairability score (0-100 scale, sum of 5 criteria).",
-   "range": "xsd:decimal",
-   "section": "general",
-   "tier": "consumer",
-   "tier_rationale": "The 0-100 total score is the published aggregate behind the consumer-facing repairability label.",
    "tier_mandated": false,
    "granularity": "class",
    "required": false
